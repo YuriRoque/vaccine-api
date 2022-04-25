@@ -35,14 +35,14 @@ class SchedulerController {
     try {
       const { name, birthDate, appointment } = request.body;
 
-      const scheduler = await SchedulerModel.find({ appointment });
+      let scheduler = await SchedulerModel.find({ appointment });
 
-      if (!scheduler) {
+      if (scheduler.length === 0) {
         scheduler = await SchedulerModel.create({
           name,
           birthDate,
           appointment,
-          appointmentQuantity: appointmentQuantity++,
+          appointmentQuantity: 1,
         });
 
         return response
@@ -50,10 +50,13 @@ class SchedulerController {
           .json({ message: 'Scheduler created successfully' });
       }
 
-      if (scheduler.appointmentQuantity < 2) {
+      if (scheduler[0].appointmentQuantity < 2) {
         scheduler.name.push(name);
         scheduler.birthDate.push(birthDate);
+        scheduler.appointment.push(appointment);
         scheduler.appointmentQuantity += 1;
+
+        await scheduler.save();
 
         return response
           .status(201)
